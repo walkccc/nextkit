@@ -9,6 +9,7 @@ import { Icons } from '@/components/icons';
 import { MobileNav } from '@/components/mobile-nav';
 import { ModeToggle } from '@/components/mode-toggle';
 import { buttonVariants } from '@/components/ui/button';
+import { UserAccountNav } from '@/components/user-account-nav';
 import { siteConfig } from '@/config/site';
 import { cn } from '@/lib/utils';
 import { NavItem } from '@/types';
@@ -19,7 +20,12 @@ interface NavbarProps extends React.HTMLAttributes<HTMLDivElement> {
   currentUser?: User;
 }
 
-export function Navbar({ navItems, children, className }: NavbarProps) {
+export function Navbar({
+  navItems,
+  children,
+  currentUser,
+  className,
+}: NavbarProps) {
   const segment = useSelectedLayoutSegment();
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
 
@@ -63,15 +69,19 @@ export function Navbar({ navItems, children, className }: NavbarProps) {
         </div>
         <div className="flex items-center space-x-2">
           <ModeToggle />
-          <Link
-            href="/login"
-            className={cn(
-              buttonVariants({ variant: 'secondary', size: 'sm' }),
-              'px-4',
-            )}
-          >
-            Login
-          </Link>
+          {currentUser ? (
+            <UserAccountNav user={currentUser} />
+          ) : (
+            <Link
+              href="/login"
+              className={cn(
+                buttonVariants({ variant: 'secondary', size: 'sm' }),
+                'px-4',
+              )}
+            >
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </header>
