@@ -1,0 +1,240 @@
+---
+title: Apple macOS 裝機指南
+description: This is a guide for setting up a new macOS.
+date: 2024-04-07
+published: true
+---
+
+> After completely reinstalling the whole new macOS, you probably want to make
+> everything in a great order.
+
+## Personal Preference
+
+### Create a user with capitalized folder name
+
+```bash
+sudo dscl . -create /Users/Jay
+sudo dscl . -create /Users/Jay UserShell /bin/zsh
+sudo dscl . -create /Users/Jay RealName "Peng-Yu Chen"
+sudo dscl . -create /Users/Jay UniqueID 718
+sudo dscl . -create /Users/Jay PrimaryGroupID 20
+sudo dscl . -create /Users/Jay NFSHomeDirectory /Users/Jay
+sudo dscl . -passwd /Users/Jay 0000
+sudo dscl . -append /Groups/admin GroupMembership Jay
+```
+
+### Download [Magnet](https://apps.apple.com/us/app/magnet/id441258766?mt=12) from App Store
+
+### Set the password less than 4 characters
+
+```bash
+# Need some admin level permissions
+sudo su -
+
+# Retrieve the current policies and save them into a temp xml file
+pwpolicy getaccountpolicies > temp.xml
+
+# Open the policy file
+vi temp.xml
+```
+
+- Delete the entire first line specifying: `Getting global account policies` to
+  make it valid xml
+- Change `{4,}` to `{1,}` on the line:
+  `<string>policyAttributePassword matches '^$|.{4,}+'</string>`
+- Save the changes
+
+```bash
+# Save this new policy back into the system
+pwpolicy setaccountpolicies temp.xml
+
+# Remove the temporary xml file
+rm temp.xml
+
+# Now you'd be able to change your password
+passwd
+
+# Don't forget to change the security password!
+security set-keychain-password
+```
+
+### Increase cursor speed
+
+```bash
+defaults write NSGlobalDomain KeyRepeat -int 1
+defaults write NSGlobalDomain InitialKeyRepeat -int 13
+```
+
+### Enable Trackpad Three Finger Drag
+
+```bash
+defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
+```
+
+### Make dock appear instantly
+
+```bash
+defaults write com.apple.Dock autohide-delay -float 0.0001; killall Dock
+defaults delete com.apple.Dock autohide-delay; killall Dock
+```
+
+### Show path in the Finder title bar
+
+```bash
+defaults write com.apple.finder _FXShowPosixPathInTitle -bool true; killall Finder
+```
+
+### Disable shadow of screenshot
+
+```bash
+defaults write com.apple.screencapture disable-shadow -bool true
+```
+
+## Setup Homebrew and Terminal
+
+> We use Homebrew since it's a great package manager.
+
+### Install [**Homebrew**](https://brew.sh/index_zh-tw)
+
+This script installs Homebrew to its preferred prefix (`/usr/local` for macOS
+Intel, `/opt/homebrew` for Apple Silicon and `/home/linuxbrew/.linuxbrew` for
+Linux) so that you don’t need sudo when you brew install.
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Run these two commands in your terminal to add Homebrew to your PATH:
+touch ~/.config/zsh/.zprofile
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.config/zsh/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+### Install Essentials
+
+```bash
+brew install --cask iterm2 visual-studio-code snipaste
+bres install --cask google-drive-file-stream spotify
+brew install neovim bat cmake
+```
+
+### Install dotfiles
+
+> Make sure the path is clean!
+>
+> E.g. put zsh related files under `$HOME/.config/zsh`
+
+```bash
+curl https://codeload.github.com/walkccc/dotfiles/tar.gz/main | \
+  tar -xz --strip=1 dotfiles-main
+rm README.md
+rm .gitignore
+```
+
+### Install [**zimfw**](https://github.com/zimfw/zimfw)
+
+```bash
+# Install zimfw
+curl -fsSL https://raw.githubusercontent.com/zimfw/install/master/install.zsh | zsh
+```
+
+Restart your terminal. Now you'll see Powerlevel10k configuration wizard.
+
+### Install [vim-plug](https://github.com/junegunn/vim-plug) for Neovim
+
+```bash
+# https://github.com/junegunn/vim-plug
+sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
+       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+```
+
+```
+:PlugInstall
+```
+
+### Resolve VSCode Problems
+
+```bash
+# Vim keyrepeating not working in VSCode
+defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+```
+
+## Java
+
+Ref: https://java.christmas/2019/16
+
+```bash
+brew install AdoptOpenJDK/openjdk/adoptopenjdk{8,11,13,15}
+```
+
+## Docker
+
+[Setup completion](https://docs.docker.com/docker-for-mac/#zsh)
+
+```bash
+etc=/Applications/Docker.app/Contents/Resources/etc
+ln -s $etc/docker.zsh-completion /usr/local/share/zsh/site-functions/_docker
+ln -s $etc/docker-compose.zsh-completion /usr/local/share/zsh/site-functions/_docker-compose
+```
+
+## iTerm
+
+- In Preferences > Profiles > Windows ![](https://i.imgur.com/ngLUbr4.png)
+- In Preferences > Keys > Hotkey Click "Show/hide all windows with a system-wide
+  hotkey" Record the hotkey you prefer.
+
+## VSCode
+
+Open in VSCode
+
+![](https://i.imgur.com/8Sw8Mdd.png)
+
+```bash
+open -n -b "com.microsoft.VSCode" --args "$*"
+```
+
+[vs-code.icns](https://github.com/cnstntn-kndrtv/open-in-buttons-for-finder-toolbar/blob/master/src/icons/vs-code.icns)
+
+## Safari Extension, Xcode
+
+We need `safari-web-extension-converter` to convert our Chrome Extension.
+However, out `xcode-select` doesn't link to the correct path.
+
+```bash
+# original
+xcode-select -p # /Library/Developer/CommandLineTools
+# connect to the correct path
+sudo xcode-select -s sudo xcode-select -s /Applications/Xcode.app
+# now, we can do the following to convert our app
+xcrun safari-web-extension-converter ~/Repos/leetcode-search-by-question-id
+```
+
+## Git
+
+### [Revert a Git repository to a previous commit](https://stackoverflow.com/questions/4114095/how-to-revert-a-git-repository-to-a-previous-commit)
+
+### [Rebase without changing timestamps](https://stackoverflow.com/questions/2973996/git-rebase-without-changing-commit-timestamps)
+
+```bash
+git rebase -i --root
+# Change the commit from "pick" to "edit"
+# :wq
+GIT_COMMITTER_DATE="2018-03-20T12:00:00" git commit --amend --date="2018-03-20T12:00:00"
+# Check the SHA of the new root commit message
+git rebase --committer-date-is-author-date SHA_OF_ROOT
+```
+
+## Troubleshooting
+
+### Location of `bits/stdc++.h`
+
+```bash
+/usr/local/include/bits/stdc++.h
+```
+
+### [Remove .DS_Store](https://www.tekrevue.com/tip/stop-ds-store-files-mac-network/)
+
+```bash
+sudo find / -name .DS_Store
+defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+sudo find / -name .DS_Store -exec rm {} +
+```

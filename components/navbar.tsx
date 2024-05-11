@@ -30,7 +30,7 @@ export function Navbar({
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
 
   return (
-    <header className={className}>
+    <header className={cn(className, 'z-40')}>
       <div className="container flex h-16 items-center justify-between">
         <div className="flex gap-6 md:gap-10">
           <Link href="/" className="hidden items-center space-x-2 md:flex">

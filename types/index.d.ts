@@ -6,6 +6,8 @@ export type NavItem = {
   disabled?: boolean;
 };
 
+export type MainNavItem = NavItem;
+
 export type MarketingConfig = {
   navItems: NavItem[];
 };
@@ -22,12 +24,26 @@ export type SiteConfig = {
 
 export type SidebarNavItem = {
   title: string;
-  href: string;
   disabled?: boolean;
+  external?: boolean;
   icon?: keyof typeof Icons;
-};
+} & (
+  | {
+      href: string;
+      items?: never;
+    }
+  | {
+      href?: string;
+      items: NavLink[];
+    }
+);
 
 export type DashboardConfig = {
+  navItems: NavItem[];
+  sidebarNavItems: SidebarNavItem[];
+};
+
+export type DocsConfig = {
   navItems: NavItem[];
   sidebarNavItems: SidebarNavItem[];
 };
